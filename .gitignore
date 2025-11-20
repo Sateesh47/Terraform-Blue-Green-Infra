@@ -1,0 +1,5 @@
+serviceprinciple.txt
+.terraform/
+*.tfstate
+*.tfstate.backup
+
