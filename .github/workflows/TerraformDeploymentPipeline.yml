@@ -34,7 +34,8 @@ jobs:
 
       # 4. Terraform Init (configure backend storage for state)
       - name: Terraform Init
-        run: terraform init \
+        run: |
+         terraform init \
           -backend-config="resource_group_name=sateesh0526" \
           -backend-config="storage_account_name=tfazurestorageaccount" \
           -backend-config="container_name=tfstate" \
