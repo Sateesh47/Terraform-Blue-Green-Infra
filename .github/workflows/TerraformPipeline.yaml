@@ -1,0 +1,57 @@
+name: Terraform Pipeline
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout your repository code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Install Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.6
+
+      # 3. Inject Azure Service Principal credentials from GitHub Secrets
+      - name: Set Azure Credentials
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: echo "Azure credentials injected"
+
+      # 4. Terraform Init (configure backend storage for state)
+      - name: Terraform Init
+        run: terraform init \
+          -backend-config="resource_group_name=sateesh0526" \
+          -backend-config="storage_account_name=tfazurestorageaccount" \
+          -backend-config="container_name=tfstate" \
+          -backend-config="key=dev.terraform.tfstate"
+
+      # 5. Terraform Validate (check syntax and configuration)
+      - name: Terraform Validate
+        run: terraform validate
+
+      # 6. Terraform Format (ensure consistent formatting)
+      - name: Terraform Format
+        run: terraform fmt -check
+
+      # 7. Terraform Plan (preview changes)
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      # 8. Terraform Apply (apply changes)
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
